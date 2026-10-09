@@ -1,22 +1,29 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, ThemeKey } from 'claude-code'
 
-import type { Account, Limit } from '../types'
+import type { Account, Ctx, Limit, Msgs } from '../types'
 
 const limits = atom({ plugin: 'usage-limits', key: 'limits' } as const, [] as Limit[])
 const now = atom({ plugin: 'usage-limits', key: 'now' } as const, 0)
 const account = atom({ plugin: 'usage-limits', key: 'account' } as const, null as Account | null)
+const ctx = atom({ plugin: 'usage-limits', key: 'ctx' } as const, null as Ctx | null)
+const msgs = atom({ plugin: 'usage-limits', key: 'msgs' } as const, { since: 0, n: 0 } as Msgs)
 
-// calibration knob: cells between the footer's right edge and the terminal's
+// calibration knobs: cells between the footer's right edge and the terminal's;
+// what follows a symbol icon (Ghostty ≥1.2 lets a symbol spill into one blank cell after it; ' ' elsewhere)
 const RIGHT_PAD = 2
+const ICON_GAP = '  '
 
+export type Run = { t: string; color?: ThemeKey; dim?: boolean }
 export type Gauge = { tag: string; glyph: string; pct: number; color: ThemeKey; eta?: string }
+
+const tone = (pct: number): ThemeKey => (pct < 50 ? 'success' : pct < 80 ? 'warning' : 'error')
 
 const gauge = (tag: string, pct: number, eta?: string): Gauge => ({
   tag,
   glyph: '○◔◑◕●'[Math.min(4, Math.round(pct / 25))]!,
   pct: Math.round(pct),
-  color: pct < 50 ? 'success' : pct < 80 ? 'warning' : 'error',
+  color: tone(pct),
   eta,
 })
 
@@ -38,9 +45,21 @@ export function gauges(rl: readonly Limit[], t: number): Gauge[] {
   return out
 }
 
-const gaugeText = (g: Gauge) => `${g.tag}${g.glyph} ${g.pct}%${g.eta ? ` ↻ ${g.eta}` : ''}`
+export const fmtTokens = (n: number) => (n >= 1e6 ? `${+(n / 1e6).toFixed(1)}M` : n >= 1000 ? `${Math.round(n / 1000)}k` : `${n}`)
 
-// spaces between the account and the gauges so the account sits mid-screen; 3 when the terminal is too narrow
+// right side, one run list per segment: ❯ prompts sent │ ⛁ context │ 5h gauge │ weekly gauge
+export function segments(n: number, c: Ctx | null, gs: readonly Gauge[]): Run[][] {
+  const segs: Run[][] = [[{ t: `❯${ICON_GAP}`, color: 'claude' }, { t: `${n}` }]]
+  if (c?.tokens !== undefined) {
+    segs.push([{ t: `⛁${ICON_GAP}${fmtTokens(c.tokens)}`, color: tone(c.percent ?? 0) }, { t: `/${fmtTokens(c.window)}`, dim: true }])
+  }
+  for (const g of gs) segs.push([{ t: `${g.tag}${g.glyph} ${g.pct}%`, color: g.color }, ...(g.eta ? [{ t: ` ↻ ${g.eta}`, dim: true }] : [])])
+  return segs
+}
+
+const width = (rs: readonly Run[]) => rs.reduce((w, r) => w + r.t.length, 0)
+
+// spaces between the account and the right side so the account sits mid-screen; 3 when the terminal is too narrow
 // ponytail: counts one cell per UTF-16 unit, right for these glyphs and an ASCII email
 export const centerGap = (cols: number | undefined, accountW: number, rightW: number) =>
   Math.max(3, cols ? cols - RIGHT_PAD - rightW - Math.floor((cols - accountW) / 2) - accountW : 0)
@@ -66,51 +85,58 @@ async function readAccount($: EngineInterface): Promise<Account | null> {
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const result = await next(e)
-    const { rateLimits } = await $.session.usage()
+    const usage = await $.session.usage()
     const t = await $.clock.now()
     const acct = await readAccount($)
-    await update($, limits, () => rateLimits)
+    await update($, limits, () => usage.rateLimits)
+    await update($, ctx, () => usage.context)
     await update($, now, () => t)
     await update($, account, () => acct)
+    // a reload keeps the count; /clear (a new startedAt) starts it over
+    await update($, msgs, m => (m.since === usage.startedAt ? m : { since: usage.startedAt, n: 0 }))
     // ponytail: 30s tick only to move the countdown; percentages come from session.measure
     $.clock.every(30_000, () => void $.clock.now().then(t => update($, now, () => t)))
     return result
   })
 
-  // pushed after each response and whenever a window moves a whole point; re-reads the account so a /login shows
+  // the person's own prompts (typed, or through Remote Control), not notifications, peers or schedules
+  on('prompt.submit', async ($, e, next) => {
+    if (e.origin.kind === 'composer' || e.origin.kind === 'bridge') {
+      const { startedAt } = await $.session.usage()
+      await update($, msgs, m => ({ since: startedAt, n: m.since === startedAt ? m.n + 1 : 1 }))
+    }
+    return next(e)
+  })
+
+  // pushed after each turn and whenever a window moves a whole point; re-reads the account so a /login shows
   on('session.measure', async ($, e, next) => {
     const t = await $.clock.now()
     const acct = await readAccount($)
     await update($, limits, () => e.rateLimits)
+    await update($, ctx, () => e.context)
     await update($, now, () => t)
     await update($, account, () => acct)
     return next(e)
   })
 
   on('ui.render', { component: 'SessionMode' }, async ($, e, next) => {
-    const gs = gauges(await read($, limits), await read($, now))
     const acct = await read($, account)
-    if (!gs.length && !acct) return next(e)
+    const segs = segments((await read($, msgs)).n, await read($, ctx), gauges(await read($, limits), await read($, now)))
 
-    const modes = e.props.modes.length ? `${e.props.modes.join(' & ')}  ` : ''
-    const rightW = modes.length + gs.map(gaugeText).join(' │ ').length
+    const right: Run[] = e.props.modes.length ? [{ t: `${e.props.modes.join(' & ')}  `, dim: true }] : []
+    segs.forEach((s, i) => right.push(...(i ? [{ t: ' │ ', dim: true }] : []), ...s))
+    const left: Run[] = acct
+      ? [{ t: `☺${ICON_GAP}`, color: 'claude' }, { t: acct.email }, ...(acct.plan ? [{ t: ' / ', dim: true }, { t: acct.plan }] : [])]
+      : []
+    const last = left.at(-1)
+    if (last) left[left.length - 1] = { ...last, t: last.t + ' '.repeat(centerGap(e.viewport?.columns, width(left), width(right))) }
+
     const { Text } = $.ui.resolve(e)
     return (
       <Text>
-        {acct && (
-          <Text>
-            <Text color="claude">☺</Text> {acct.email}
-            {acct.plan && <Text dimColor> / </Text>}
-            {acct.plan}
-            {' '.repeat(centerGap(e.viewport?.columns, 2 + acct.email.length + (acct.plan ? 3 + acct.plan.length : 0), rightW))}
-          </Text>
-        )}
-        {modes && <Text dimColor>{modes}</Text>}
-        {gs.map((g, i) => (
-          <Text key={`g${i}`}>
-            {i > 0 && <Text dimColor> │ </Text>}
-            <Text color={g.color}>{g.tag}{g.glyph} {g.pct}%</Text>
-            {g.eta && <Text dimColor> ↻ {g.eta}</Text>}
+        {[...left, ...right].map((r, i) => (
+          <Text key={`r${i}`} {...(r.color ? { color: r.color } : r.dim ? { dimColor: true } : {})}>
+            {r.t}
           </Text>
         ))}
       </Text>

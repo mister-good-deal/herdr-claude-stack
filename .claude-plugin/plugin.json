@@ -1,7 +1,7 @@
 {
   "name": "usage-limits",
-  "version": "0.3.0",
-  "description": "Compte actif et forfait au centre du footer, limite 5h (% + temps avant reset) et limite hebdo (%) à droite",
+  "version": "0.4.0",
+  "description": "Footer : compte et forfait au centre ; messages envoyés, contexte, limites 5h et hebdo à droite",
   "author": { "name": "mister-good-deal" },
   "types": "./types/index.d.ts"
 }
