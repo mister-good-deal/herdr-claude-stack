@@ -1,12 +1,12 @@
 # usage-limits
 
-Mod Claude Code : affiche dans le footer le compte actif (au centre) et l'utilisation des limites d'abonnement (à droite).
+Mod Claude Code : affiche dans le footer le compte actif et son forfait (au centre) et l'utilisation des limites d'abonnement (à droite).
 
 ```
-? for shortcuts            ☺ you@example.com                   ⁵ʰ◑ 42% ↻ 2h13 │ ⁷ʲ◔ 18%
+? for shortcuts            ☺ you@example.com / Claude Max x20                   ⁵ʰ◑ 42% ↻ 2h13 │ ⁷ʲ◔ 18%
 ```
 
-- `☺` : email du compte connecté, lu dans `~/.claude.json` (`oauthAccount`), relu après chaque réponse
+- `☺` : email du compte connecté et son forfait (`Claude Pro`, `Claude Max x5`, `Claude Max x20`…), lus dans `~/.claude.json` (`oauthAccount`), relus après chaque réponse
 - `⁵ʰ` : fenêtre de 5h, % utilisé + temps avant reset
 - `⁷ʲ` : fenêtre hebdomadaire, % utilisé
 - jauge `○◔◑◕●` colorée selon le thème : vert < 50 %, orange < 80 %, rouge au-delà

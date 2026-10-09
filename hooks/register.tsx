@@ -1,11 +1,11 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, ThemeKey } from 'claude-code'
 
-import type { Limit } from '../types'
+import type { Account, Limit } from '../types'
 
 const limits = atom({ plugin: 'usage-limits', key: 'limits' } as const, [] as Limit[])
 const now = atom({ plugin: 'usage-limits', key: 'now' } as const, 0)
-const email = atom({ plugin: 'usage-limits', key: 'email' } as const, null as string | null)
+const account = atom({ plugin: 'usage-limits', key: 'account' } as const, null as Account | null)
 
 // calibration knob: cells between the footer's right edge and the terminal's
 const RIGHT_PAD = 2
@@ -45,11 +45,19 @@ const gaugeText = (g: Gauge) => `${g.tag}${g.glyph} ${g.pct}%${g.eta ? ` ↻ ${g
 export const centerGap = (cols: number | undefined, accountW: number, rightW: number) =>
   Math.max(3, cols ? cols - RIGHT_PAD - rightW - Math.floor((cols - accountW) / 2) - accountW : 0)
 
+// claude_max + default_claude_max_20x → "Claude Max x20"; null off a Claude plan
+export function planName(type?: string | null, tier?: string | null): string | null {
+  if (!type?.startsWith('claude_')) return null
+  const x = tier?.match(/_(\d+)x$/)?.[1]
+  return `Claude ${type.slice(7).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}${x ? ` x${x}` : ''}`
+}
+
 // oauthAccount from the global config; null on an API key or a config without one
-async function readEmail($: EngineInterface): Promise<string | null> {
+async function readAccount($: EngineInterface): Promise<Account | null> {
   const dir = (await $.env.get('CLAUDE_CONFIG_DIR')) ?? (await $.env.get('HOME'))
   try {
-    return JSON.parse(await $.fs.read(`${dir}/.claude.json`)).oauthAccount?.emailAddress ?? null
+    const oa = JSON.parse(await $.fs.read(`${dir}/.claude.json`)).oauthAccount
+    return oa?.emailAddress ? { email: oa.emailAddress, plan: planName(oa.organizationType, oa.organizationRateLimitTier) } : null
   } catch {
     return null
   }
@@ -60,10 +68,10 @@ export const register: Register = on => {
     const result = await next(e)
     const { rateLimits } = await $.session.usage()
     const t = await $.clock.now()
-    const mail = await readEmail($)
+    const acct = await readAccount($)
     await update($, limits, () => rateLimits)
     await update($, now, () => t)
-    await update($, email, () => mail)
+    await update($, account, () => acct)
     // ponytail: 30s tick only to move the countdown; percentages come from session.measure
     $.clock.every(30_000, () => void $.clock.now().then(t => update($, now, () => t)))
     return result
@@ -72,24 +80,31 @@ export const register: Register = on => {
   // pushed after each response and whenever a window moves a whole point; re-reads the account so a /login shows
   on('session.measure', async ($, e, next) => {
     const t = await $.clock.now()
-    const mail = await readEmail($)
+    const acct = await readAccount($)
     await update($, limits, () => e.rateLimits)
     await update($, now, () => t)
-    await update($, email, () => mail)
+    await update($, account, () => acct)
     return next(e)
   })
 
   on('ui.render', { component: 'SessionMode' }, async ($, e, next) => {
     const gs = gauges(await read($, limits), await read($, now))
-    const mail = await read($, email)
-    if (!gs.length && !mail) return next(e)
+    const acct = await read($, account)
+    if (!gs.length && !acct) return next(e)
 
     const modes = e.props.modes.length ? `${e.props.modes.join(' & ')}  ` : ''
     const rightW = modes.length + gs.map(gaugeText).join(' │ ').length
     const { Text } = $.ui.resolve(e)
     return (
       <Text>
-        {mail && <Text><Text color="claude">☺</Text> {mail}{' '.repeat(centerGap(e.viewport?.columns, mail.length + 2, rightW))}</Text>}
+        {acct && (
+          <Text>
+            <Text color="claude">☺</Text> {acct.email}
+            {acct.plan && <Text dimColor> / </Text>}
+            {acct.plan}
+            {' '.repeat(centerGap(e.viewport?.columns, 2 + acct.email.length + (acct.plan ? 3 + acct.plan.length : 0), rightW))}
+          </Text>
+        )}
         {modes && <Text dimColor>{modes}</Text>}
         {gs.map((g, i) => (
           <Text key={`g${i}`}>

@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { centerGap, gauges } from '../hooks/register'
+import { centerGap, gauges, planName } from '../hooks/register'
 
 const T = Date.parse('2026-10-09T12:00:00Z')
 
@@ -25,4 +25,11 @@ test('centerGap', () => {
   expect(centerGap(100, 20, 18)).toBe(20)
   expect(centerGap(40, 20, 18)).toBe(3)
   expect(centerGap(undefined, 20, 18)).toBe(3)
+})
+
+test('planName', () => {
+  expect(planName('claude_max', 'default_claude_max_20x')).toBe('Claude Max x20')
+  expect(planName('claude_max', 'default_claude_max_5x')).toBe('Claude Max x5')
+  expect(planName('claude_pro', 'default_claude_ai')).toBe('Claude Pro')
+  expect(planName(null, null)).toBe(null)
 })
