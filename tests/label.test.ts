@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { gauges } from '../hooks/register'
+import { centerGap, gauges } from '../hooks/register'
 
 const T = Date.parse('2026-10-09T12:00:00Z')
 
@@ -18,4 +18,11 @@ test('gauges', () => {
   expect(gauges([{ kind: 'five_hour', percentUsed: 90, resetsAt: '2026-10-09T11:00:00Z' }], T))
     .toEqual([{ tag: '⁵ʰ', glyph: '○', pct: 0, color: 'success', eta: undefined }])
   expect(gauges([{ kind: 'seven_day', percentUsed: 65 }], T)[0]?.color).toBe('warning')
+})
+
+test('centerGap', () => {
+  // 100 cols, account 20 wide starts at 40, ends at 60; right part 18 wide ends at 98 → starts at 80 → 20 spaces
+  expect(centerGap(100, 20, 18)).toBe(20)
+  expect(centerGap(40, 20, 18)).toBe(3)
+  expect(centerGap(undefined, 20, 18)).toBe(3)
 })
