@@ -1,0 +1,6 @@
+{
+  "name": "claude-usage-limits",
+  "owner": { "name": "mister-good-deal" },
+  "description": "Mod Claude Code : limites 5h et hebdo dans le footer",
+  "plugins": [{ "name": "usage-limits", "source": "./" }]
+}
