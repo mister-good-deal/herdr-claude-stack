@@ -1,0 +1,19 @@
+{
+  "name": "herdr-claude-stack",
+  "owner": {
+    "name": "Romain Laneuville"
+  },
+  "plugins": [
+    {
+      "name": "flotte",
+      "source": "./plugins/flotte",
+      "description": "Coordinateur et lieutenants : une flotte d'agents Claude Code dans herdr, un worktree par lot, G1 avant le code, relecture Opus, canal SendMessage."
+    },
+    {
+      "name": "vitrine",
+      "source": "./plugins/vitrine",
+      "description": "Montrer à l'humain dans un pane à droite : images côte à côte et écran vivant de l'app web, via terminal-browser."
+    }
+  ],
+  "description": "Flotte d’agents Claude Code dans herdr (coordinateur et lieutenants) et vitrine pour montrer à l’humain des images et des écrans vivants via terminal-browser."
+}

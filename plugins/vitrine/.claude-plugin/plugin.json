@@ -1,0 +1,7 @@
+{
+  "name": "vitrine",
+  "version": "0.1.0",
+  "description": "Montrer à l'humain dans un pane à droite : images côte à côte et écran vivant de l'app web, via terminal-browser.",
+  "author": { "name": "Romain Laneuville" },
+  "license": "MIT"
+}
