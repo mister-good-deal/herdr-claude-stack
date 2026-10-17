@@ -1,10 +1,9 @@
 {
   "name": "flotte",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Coordinateur et lieutenants : une flotte d'agents Claude Code dans herdr, un worktree par lot, G1 avant le code, relecture Opus, canal SendMessage.",
   "author": {
     "name": "Romain Laneuville"
   },
-  "license": "MIT",
-  "types": "./types/index.d.ts"
+  "license": "MIT"
 }

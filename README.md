@@ -10,7 +10,7 @@ Les plugins sont écrits en français et tirés d'un vrai projet. Ils supposent 
 
 | Plugin | Contenu | Pour |
 |---|---|---|
-| **`flotte`** | skills `coordinateur` et `lieutenant`, scripts `lancer-lieutenant.sh` et `veille-boite.sh`, mod « bandeau de la flotte » et garde-fous | mener des lieutenants : un par lot, chacun dans son worktree herdr, avec une G1 avant le code, une relecture indépendante, un push et une MR par lot |
+| **`flotte`** | skills `coordinateur` et `lieutenant`, scripts `lancer-lieutenant.sh` et `veille-boite.sh`, garde-fous (mod) | mener des lieutenants : un par lot, chacun dans son worktree herdr, avec une G1 avant le code, une relecture indépendante, un push et une MR par lot |
 | **`vitrine`** | skills `montrer` et `apercu` | montrer à l'humain des images côte à côte, ou un écran vivant de l'app web qu'il peut cliquer, dans terminal-browser à droite |
 
 ## Installer
@@ -58,12 +58,9 @@ humain ──► coordinateur ──herdr agent prompt──► lt-<sujet> (work
 
 ## Le mod de `flotte`
 
-- **Bandeau** : au-dessus du prompt du coordinateur, une ligne par lieutenant. Elle donne son état (au travail, en
-  veille, bloqué), sa machine, sa branche et sa MR ouverte avec son statut de fusion (`glab`). Le bandeau se rafraîchit
-  toutes les 30 s, on peut le masquer, et il ne s'affiche pas dans la session d'un lieutenant.
-- **Garde-fous** :
-  - `herdr agent prompt` ne vise qu'un lieutenant (`lt-…`) ;
-  - `pkill` et `killall` sont refusés : un processus s'arrête par son PID.
+Deux garde-fous sur le shell :
+- `herdr agent prompt` ne vise qu'un lieutenant (`lt-…`) ;
+- `pkill` et `killall` sont refusés : un processus s'arrête par son PID.
 
 ## Licence
 

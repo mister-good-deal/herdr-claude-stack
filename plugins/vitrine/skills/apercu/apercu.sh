@@ -18,9 +18,12 @@ url=http://127.0.0.1:$port
 serve=
 if [ "${1:-}" = --serve ]; then serve=1; shift; fi
 if [ "${1:-}" = --stop ]; then
-    [ -f "$pidfile" ] && kill "$(cat "$pidfile")" 2> /dev/null && echo "serveur arrêté ($url)"
+    [ -f "$pidfile" ] || { echo "✗ aucun serveur lancé par apercu sur $url : arrête-le par son PID" >&2; exit 1; }
+    kill "$(cat "$pidfile")" 2> /dev/null || true
     rm -f "$pidfile"
-    exit 0
+    for _ in $(seq 1 10); do curl -sf -o /dev/null "$url" || { echo "serveur arrêté ($url)"; exit 0; }; sleep 0.5; done
+    echo "✗ $url répond encore : arrête-le par son PID" >&2
+    exit 1
 fi
 
 APERCU_CMD= APERCU_DIR=.
@@ -40,10 +43,11 @@ fi
 [ -n "$APERCU_CMD" ] || { echo "✗ aucun serveur trouvé : écris APERCU_CMD dans $root/.apercu" >&2; exit 2; }
 
 if ! curl -sf -o /dev/null "$url"; then
-    (cd "$root/$APERCU_DIR" && setsid bash -c "$APERCU_CMD" > "$run/serveur-$port.log" 2>&1 < /dev/null &
-        echo $! > "$pidfile")
+    (cd "$root/$APERCU_DIR" && setsid -f bash -c "$APERCU_CMD" > "$run/serveur-$port.log" 2>&1 < /dev/null)
     for _ in $(seq 1 60); do curl -sf -o /dev/null "$url" && break; sleep 1; done
     curl -sf -o /dev/null "$url" || { echo "✗ le serveur ne répond pas, voir $run/serveur-$port.log" >&2; exit 3; }
+    # Le PID qui écoute : `setsid -f` fork et rend la main sans dire le PID du serveur.
+    ss -Hltnp "sport = :$port" | grep -o 'pid=[0-9]*' | head -1 | cut -d= -f2 > "$pidfile"
 fi
 [ -n "$serve" ] || terminal-browser open "$url${1:-/}" --split right > /dev/null
 echo "aperçu : $url${1:-/}  (worktree $root, journal $run/serveur-$port.log)"
