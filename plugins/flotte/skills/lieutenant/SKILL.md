@@ -66,7 +66,8 @@ Ta mission te donne :
 Ton pane n'est pas dans son workspace.
 - Pour un écran : lance `apercu.sh --serve '/?proto=A'` (skill `apercu`, plugin `vitrine`), puis envoie au coordinateur
   chaque URL avec une ligne de description. C'est lui qui l'ouvre chez l'humain.
-- Pour des images : envoie-lui leurs chemins.
+- Pour des images ou un document markdown à relire : envoie-lui leurs chemins. Il les montre par `montrer` ou
+  `lire`.
 
 ## Veille
 

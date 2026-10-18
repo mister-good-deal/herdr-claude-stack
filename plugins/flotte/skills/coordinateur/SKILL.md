@@ -81,9 +81,12 @@ Un lieutenant n'est pas un démon. Au retour de l'humain ou après un redémarra
 ## Avec l'humain
 
 - Des rapports courts : ce qui a changé, ce qui l'attend, ce qui est à lui. Chaque MR et chaque issue sont nommées.
-- **Montrer** plutôt que décrire (plugin `vitrine`) : la skill `montrer` pour des images, la skill `apercu` pour un écran
-  vivant. Un lieutenant fait `apercu.sh --serve` et t'envoie l'URL ; c'est toi qui l'ouvres dans le navigateur de
-  l'humain, avec `terminal-browser new-tab --browser <clé> <url>`.
+- **Montrer** plutôt que décrire (plugin `vitrine`) : la skill `montrer` pour des images, la skill `lire` pour un
+  document markdown à relire (jamais un long texte collé dans la conversation), la skill `apercu` pour un écran vivant.
+  Un lieutenant fait `apercu.sh --serve` et t'envoie l'URL ; c'est toi qui l'ouvres dans le navigateur de l'humain,
+  avec `terminal-browser new-tab --browser <clé> <url>`.
+  Pour faire choisir entre des variantes, `disposition comparer a b c` les met côte à côte au-dessus de ton terminal ;
+  `disposition ranger` rend la console normale dès la réponse.
 - Ses décisions s'écrivent sur l'issue (note « Décision de … ») et dans la mémoire du projet.
 
 ## Ménage

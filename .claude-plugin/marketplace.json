@@ -13,7 +13,12 @@
       "name": "vitrine",
       "source": "./plugins/vitrine",
       "description": "Montrer à l'humain dans un pane à droite : images côte à côte et écran vivant de l'app web, via terminal-browser."
+    },
+    {
+      "name": "chantier",
+      "source": "./plugins/chantier",
+      "description": "Workflow SDD sur Spec-Kit : feature, bug et idée, de la description à la MR, avec des pages de validation."
     }
   ],
-  "description": "Flotte d’agents Claude Code dans herdr (coordinateur et lieutenants) et vitrine pour montrer à l’humain des images et des écrans vivants via terminal-browser."
+  "description": "Flotte d’agents Claude Code dans herdr (coordinateur et lieutenants), vitrine pour montrer à l’humain des images et des écrans vivants via terminal-browser, et chantier pour mener feature, bug et idée sur Spec-Kit jusqu’à la MR."
 }

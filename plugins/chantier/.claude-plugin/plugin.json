@@ -1,0 +1,9 @@
+{
+  "name": "chantier",
+  "version": "0.1.0",
+  "description": "Workflow SDD sur Spec-Kit : feature, bug et idée, de la description à la MR, avec des pages de validation",
+  "author": {
+    "name": "Romain Laneuville"
+  },
+  "license": "MIT"
+}
