@@ -1,6 +1,6 @@
 {
   "name": "vitrine",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Montrer à l'humain dans un pane à droite : images côte à côte, document markdown en thème Nord et écran vivant de l'app web, via terminal-browser ; disposer l'onglet herdr selon la situation.",
   "author": { "name": "Romain Laneuville" },
   "license": "MIT"

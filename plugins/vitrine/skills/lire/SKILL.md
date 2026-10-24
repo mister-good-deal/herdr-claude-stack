@@ -28,7 +28,7 @@ chargement :
 ## Schémas, ancres et liens relatifs
 
 - Un bloc ` ```mermaid ` se rend en schéma (mermaid 10.9.1, thème sombre). Un schéma plus large que la page tient
-  dans un cadre de 75vh : molette pour zoomer, glisser pour se déplacer, + − RESET, ⛶ plein écran (svg-pan-zoom 3.6.1).
+  dans un cadre calé sur sa largeur (85vh au plus) : molette pour zoomer, glisser pour se déplacer, + − RESET, ⛶ plein écran (svg-pan-zoom 3.6.1).
 - Les titres portent leurs ancres à la GitLab : minuscules, ponctuation retirée, espaces en tirets, tirets réduits.
 - Un lien relatif (`./page.md#ancre`) se résout contre `LIRE_BASE`, sans le `.md`. Pour un brouillon de page du wiki
   GitLab : `LIRE_BASE=https://<gitlab>/<groupe>/<projet>/-/wikis/<section>/`. Sans `LIRE_BASE`, il se résout contre

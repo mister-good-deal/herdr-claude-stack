@@ -91,19 +91,29 @@ function panZoomBig() {
     s.src = "https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js";
     s.onload = () => {
         for (const pre of big) {
-            const svg = pre.querySelector("svg");
-            Object.assign(pre.style, { height: "75vh", position: "relative", overflow: "hidden", cursor: "grab" });
+            const svg = pre.querySelector("svg"), box = svg.getBBox();
+            const tall = Math.min((box.height * pre.clientWidth) / box.width, 0.85 * innerHeight);
+            Object.assign(pre.style, { height: `${tall}px`, position: "relative", overflow: "hidden", cursor: "grab" });
             Object.assign(svg.style, { maxWidth: "none", width: "100%", height: "100%" });
             svg.removeAttribute("width");
             svg.removeAttribute("height");
             const pz = svgPanZoom(svg, { controlIconsEnabled: true, zoomScaleSensitivity: 0.3, minZoom: 0.2, maxZoom: 30 });
+            // Calé sur la largeur, haut du schéma en vue : un schéma très haut ne se réduit pas à une vignette.
+            const fitWidth = () => {
+                pz.resize();
+                pz.fit();
+                const z = pz.getSizes(), k = z.width / (z.viewBox.width * z.realZoom);
+                if (k > 1) (pz.zoom(pz.getZoom() * k), pz.pan({ x: 0, y: 0 }));
+                else pz.center();
+            };
+            fitWidth();
             const full = document.createElement("button");
             full.textContent = "⛶";
             full.title = "Plein écran";
             Object.assign(full.style, { position: "absolute", top: "8px", right: "8px", fontSize: "20px", cursor: "pointer" });
             full.onclick = () => (document.fullscreenElement ? document.exitFullscreen() : pre.requestFullscreen());
             pre.append(full);
-            pre.addEventListener("fullscreenchange", () => setTimeout(() => (pz.resize(), pz.fit(), pz.center()), 50));
+            pre.addEventListener("fullscreenchange", () => setTimeout(fitWidth, 50));
         }
     };
     document.head.append(s);
