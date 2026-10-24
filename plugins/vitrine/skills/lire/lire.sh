@@ -5,7 +5,7 @@
 #   lire.sh fichier.md ["Titre"]
 # Les « #123 » deviennent des liens vers les issues du dépôt git du fichier, sinon du dossier courant (GitLab ou GitHub,
 # lu sur `origin`), ou vers LIRE_ISSUES (préfixe d'URL) s'il est défini.
-# Les blocs mermaid se rendent en schémas (mermaid, CDN, versions figées). Les titres portent leurs ancres à la GitLab.
+# Les blocs mermaid se rendent en schémas (mermaid, CDN, versions figées) ; un grand schéma se zoome et se déplace. Les titres portent leurs ancres à la GitLab.
 # Les liens relatifs se résolvent contre LIRE_BASE (préfixe d'URL, « .md » retiré, pour pointer vers un wiki), sinon
 # contre le dossier du fichier.
 set -euo pipefail
@@ -79,7 +79,32 @@ if (out.querySelector("pre.mermaid")) {
     s.src = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js";
     s.onload = () => {
         mermaid.initialize({ startOnLoad: false, theme: "dark", maxTextSize: 100000, flowchart: { useMaxWidth: false } });
-        mermaid.run();
+        mermaid.run().then(panZoomBig);
+    };
+    document.head.append(s);
+}
+// Un schéma plus large que la page : molette pour zoomer, glisser pour se déplacer, ⛶ pour le plein écran.
+function panZoomBig() {
+    const big = [...out.querySelectorAll("pre.mermaid")].filter(p => p.querySelector("svg")?.getBBox().width > p.clientWidth);
+    if (!big.length) return;
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js";
+    s.onload = () => {
+        for (const pre of big) {
+            const svg = pre.querySelector("svg");
+            Object.assign(pre.style, { height: "75vh", position: "relative", overflow: "hidden", cursor: "grab" });
+            Object.assign(svg.style, { maxWidth: "none", width: "100%", height: "100%" });
+            svg.removeAttribute("width");
+            svg.removeAttribute("height");
+            const pz = svgPanZoom(svg, { controlIconsEnabled: true, zoomScaleSensitivity: 0.3, minZoom: 0.2, maxZoom: 30 });
+            const full = document.createElement("button");
+            full.textContent = "⛶";
+            full.title = "Plein écran";
+            Object.assign(full.style, { position: "absolute", top: "8px", right: "8px", fontSize: "20px", cursor: "pointer" });
+            full.onclick = () => (document.fullscreenElement ? document.exitFullscreen() : pre.requestFullscreen());
+            pre.append(full);
+            pre.addEventListener("fullscreenchange", () => setTimeout(() => (pz.resize(), pz.fit(), pz.center()), 50));
+        }
     };
     document.head.append(s);
 }
