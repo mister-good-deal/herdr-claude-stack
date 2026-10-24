@@ -25,6 +25,14 @@ chargement :
 - **Le texte ne quitte pas la machine.** La page est locale. Seuls `marked` (jsdelivr) et `highlight.js` (cdnjs)
   viennent d'un CDN, en versions figées. Jamais de viewer markdown en ligne : le document partirait chez un tiers.
 
+## Schémas, ancres et liens relatifs
+
+- Un bloc ` ```mermaid ` se rend en schéma (mermaid 10.9.1, thème sombre, flowchart à sa taille réelle, défilant).
+- Les titres portent leurs ancres à la GitLab : minuscules, ponctuation retirée, espaces en tirets, tirets réduits.
+- Un lien relatif (`./page.md#ancre`) se résout contre `LIRE_BASE`, sans le `.md`. Pour un brouillon de page du wiki
+  GitLab : `LIRE_BASE=https://<gitlab>/<groupe>/<projet>/-/wikis/<section>/`. Sans `LIRE_BASE`, il se résout contre
+  le dossier du fichier.
+
 ## Liens vers les issues
 
 Chaque `#123` du texte devient un lien vers l'issue, dans un nouvel onglet. L'URL vient du `origin` du dépôt git du
