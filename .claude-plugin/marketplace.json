@@ -18,7 +18,12 @@
       "name": "chantier",
       "source": "./plugins/chantier",
       "description": "Workflow SDD sur Spec-Kit : feature, bug et idée, de la description à la MR, avec des pages de validation."
+    },
+    {
+      "name": "usage-limits",
+      "source": "./plugins/usage-limits",
+      "description": "Footer : compte et forfait au centre ; messages envoyés, contexte, limites 5h et hebdo à droite."
     }
   ],
-  "description": "Flotte d’agents Claude Code dans herdr (coordinateur et lieutenants), vitrine pour montrer à l’humain des images et des écrans vivants via terminal-browser, et chantier pour mener feature, bug et idée sur Spec-Kit jusqu’à la MR."
+  "description": "Flotte d’agents Claude Code dans herdr (coordinateur et lieutenants), vitrine pour montrer à l’humain des images et des écrans vivants via terminal-browser, chantier pour mener feature, bug et idée sur Spec-Kit jusqu’à la MR, et usage-limits pour suivre compte, contexte et limites d’abonnement dans le footer."
 }
