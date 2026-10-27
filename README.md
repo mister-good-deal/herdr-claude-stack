@@ -1,7 +1,8 @@
 # herdr-claude-stack
 
 Des skills et des mods Claude Code pour travailler avec **une flotte d'agents** dans **herdr**, pour **montrer** à
-l'humain ce qu'on fait, dans un pane à droite de son terminal, et pour mener le travail **de l'idée à la MR** sur Spec-Kit.
+l'humain ce qu'on fait, dans un pane à droite de son terminal, pour mener le travail **de l'idée à la MR** sur Spec-Kit,
+et pour suivre **les limites d'abonnement** dans le footer.
 
 Les plugins sont écrits en français et tirés d'un vrai projet. Ils supposent l'environnement Ghostty + herdr + Claude Code
 + terminal-browser, décrit dans [docs/environnement.md](docs/environnement.md).
@@ -13,6 +14,7 @@ Les plugins sont écrits en français et tirés d'un vrai projet. Ils supposent 
 | **`flotte`** | skills `coordinateur` et `lieutenant`, scripts `lancer-lieutenant.sh` et `veille-boite.sh`, garde-fous (mod) | mener des lieutenants : un par lot, chacun dans son worktree herdr, avec une G1 avant le code, une relecture indépendante, un push et une MR par lot |
 | **`vitrine`** | skills `montrer`, `lire`, `apercu` et `disposition` | montrer à l'humain des images côte à côte, un document markdown en thème Nord (pages de validation comprises), ou un écran vivant de l'app web qu'il peut cliquer, dans terminal-browser à droite ; disposer l'onglet herdr pour lire, comparer des variantes ou suivre des journaux |
 | **`chantier`** | skills `dev-workflow`, `bug-workflow` et `idea-workflow` | mener une feature, un bug ou une idée sur Spec-Kit 1.2+, de la description à la MR, avec des gates humaines montrées en page |
+| **`usage-limits`** | footer (mod) | voir le compte et son forfait, les messages envoyés, le contexte et les limites 5h et hebdo sans quitter la conversation |
 
 ## Installer
 
@@ -22,6 +24,7 @@ Dans une session Claude Code :
 /plugin install flotte --marketplace mister-good-deal/herdr-claude-stack
 /plugin install vitrine --marketplace mister-good-deal/herdr-claude-stack
 /plugin install chantier --marketplace mister-good-deal/herdr-claude-stack
+/plugin install usage-limits --marketplace mister-good-deal/herdr-claude-stack
 ```
 
 Depuis un shell :
@@ -30,6 +33,7 @@ Depuis un shell :
 claude plugin install flotte --marketplace mister-good-deal/herdr-claude-stack
 claude plugin install vitrine --marketplace mister-good-deal/herdr-claude-stack
 claude plugin install chantier --marketplace mister-good-deal/herdr-claude-stack
+claude plugin install usage-limits --marketplace mister-good-deal/herdr-claude-stack
 ```
 
 - Réponds `y` pour ajouter la marketplace, puis choisis la portée : utilisateur pour tous tes projets, ou projet. Pour
@@ -78,6 +82,30 @@ humain ──► coordinateur ──herdr agent prompt──► lt-<sujet> (work
 Deux garde-fous sur le shell :
 - `herdr agent prompt` ne vise qu'un lieutenant (`lt-…`) ;
 - `pkill` et `killall` sont refusés : un processus s'arrête par son PID.
+
+## Le mod `usage-limits`
+
+Il remplace le footer de la session : le compte actif et son forfait au centre, puis à droite les messages envoyés, le
+contexte et l'utilisation des limites d'abonnement.
+
+```
+☺  you@example.com / Claude Max x20          ❯  12 │ ⛁  84k/200k │ ⁵ʰ◑ 42% ↻ 2h13 │ ⁷ʲ◔ 18%
+```
+
+- `☺` : email du compte connecté et son forfait (`Claude Pro`, `Claude Max x5`, `Claude Max x20`…), lus dans
+  `~/.claude.json` (`oauthAccount`) et relus après chaque réponse.
+- `❯` : messages envoyés dans la session, tapés ou par Remote Control ; `/clear` remet le compte à zéro.
+- `⛁` : tokens du contexte actuel / taille de la fenêtre.
+- `⁵ʰ` : fenêtre de 5h, % utilisé et temps avant le reset.
+- `⁷ʲ` : fenêtre hebdomadaire, % utilisé.
+- Couleurs du thème : vert sous 50 %, orange sous 80 %, rouge au-delà (jauges `○◔◑◕●` et contexte).
+
+Les % viennent de la dernière réponse de l'API, mise à jour à chaque réponse ; le compte à rebours avance toutes les
+30 s. Avec une clé API, il n'y a ni compte ni limites d'abonnement.
+
+Réglages en tête de `plugins/usage-limits/hooks/register.tsx` : `RIGHT_PAD`, la marge droite du footer pour le centrage,
+et `ICON_GAP`, deux espaces après une icône, car Ghostty ≥ 1.2 fait déborder les symboles sur la case vide suivante (un
+seul ailleurs).
 
 ## Licence
 
