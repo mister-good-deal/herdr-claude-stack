@@ -12,7 +12,7 @@ Les plugins sont écrits en français et tirés d'un vrai projet. Ils supposent 
 | Plugin | Contenu | Pour |
 |---|---|---|
 | **`flotte`** | skills `coordinateur` et `lieutenant`, scripts `lancer-lieutenant.sh` et `veille-boite.sh`, garde-fous (mod) | mener des lieutenants : un par lot, chacun dans son worktree herdr, avec une G1 avant le code, une relecture indépendante, un push et une MR par lot |
-| **`vitrine`** | skills `montrer`, `lire`, `apercu` et `disposition` | montrer à l'humain des images côte à côte, un document markdown en thème Nord (pages de validation comprises), ou un écran vivant de l'app web qu'il peut cliquer, dans terminal-browser à droite ; disposer l'onglet herdr pour lire, comparer des variantes ou suivre des journaux |
+| **`vitrine`** | skills `montrer`, `lire`, `carte`, `apercu` et `disposition` | montrer à l'humain des images côte à côte, un document markdown en thème Nord (pages de validation comprises), une carte à zoom sémantique pour relire une MR sur un seul écran, ou un écran vivant de l'app web qu'il peut cliquer, dans terminal-browser à droite ; disposer l'onglet herdr pour lire, comparer des variantes ou suivre des journaux |
 | **`chantier`** | skills `dev-workflow`, `bug-workflow` et `idea-workflow` | mener une feature, un bug ou une idée sur Spec-Kit 1.2+, de la description à la MR, avec des gates humaines montrées en page |
 | **`usage-limits`** | footer (mod) | voir le compte et son forfait, les messages envoyés, le contexte et les limites 5h et hebdo sans quitter la conversation |
 
@@ -40,8 +40,8 @@ claude plugin install usage-limits --marketplace mister-good-deal/herdr-claude-s
   un projet, l'activation s'écrit dans son `.claude/settings.json` (`enabledPlugins`), et tout clone du projet en
   hérite.
 - Dans une session, les skills s'appellent `flotte:coordinateur`, `flotte:lieutenant`, `vitrine:montrer`,
-  `vitrine:lire`, `vitrine:apercu`, `vitrine:disposition`, `chantier:dev-workflow`, `chantier:bug-workflow` et
-  `chantier:idea-workflow`.
+  `vitrine:lire`, `vitrine:carte`, `vitrine:apercu`, `vitrine:disposition`, `chantier:dev-workflow`,
+  `chantier:bug-workflow` et `chantier:idea-workflow`.
 - Pour Codex : `./install-codex.sh` lie les skills dans `~/.codex/skills/`.
 
 ## Ce que fait la flotte
