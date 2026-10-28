@@ -58,7 +58,7 @@ Les budgets, à 1200x900 :
 
 1. **La fiche** (`index.md`) : ce qui change pour la personne, les points délicats, les preuves (tests rejoués ou non).
    Ses enfants sont les composants.
-2. **Les composants** : un par sujet, pas par fichier (le consentement, la migration, le contrat IPC, la doc). Ce qui
+2. **Les composants** : un par sujet, pas par fichier (le limiteur, le client météo, la configuration). Ce qui
    n'est que renommage va dans un composant « retouches mécaniques », pour que l'humain le survole.
 3. **Les feuilles** : le diff coloré, en blocs ` ```diff `. Une ligne `=== chemin/du/fichier` ouvre chaque fichier.
    Le résumé dit ce que montre le morceau, en une phrase.
