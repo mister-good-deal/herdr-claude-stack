@@ -1,6 +1,6 @@
 ---
 name: carte
-description: "Faire relire à l'humain un sujet trop gros pour une page (une MR, une architecture) sur une carte à zoom sémantique, dans le navigateur à droite de son terminal : des schémas en couloirs (avant, pendant, après ; puis les composants), un clic sur un nœud zoome jusqu'aux feuilles de diff, et chaque étage tient dans un écran. Utiliser pour qu'il relise une MR entière sans jamais scroller."
+description: "Faire relire à l'humain un sujet trop gros pour une page (une MR, une architecture) sur une carte à zoom sémantique, dans le navigateur à droite de son terminal : des schémas en couloirs (avant, pendant, après ; puis une vue par case), un clic sur un nœud zoome jusqu'aux feuilles de diff, et chaque étage tient dans un écran. Utiliser pour qu'il relise une MR entière sans jamais scroller."
 ---
 
 # Faire relire une carte à zoom sémantique
@@ -36,9 +36,9 @@ Une phrase : ce qui change pour la personne. Les écarts et les preuves, en une 
 couloir avant Avant
 couloir pendant Ce que la MR ajoute
 couloir apres Après
-tab avant 2-3 écran @client 10 tableaux de bord | rafraîchis en même temps > composants
-seau pendant 2-4 entonnoir ajouté @limiteur Seau à jetons | 60 jetons par minute > composants
-prev apres 2-3 écran ajouté Prévisions servies | attente < 2 s au 95ᵉ centile > composants
+tab avant 2-3 écran 10 tableaux de bord | rafraîchis en même temps
+seau pendant 2-4 entonnoir ajouté @limiteur Seau à jetons | 60 jetons par minute > seau
+prev apres 2-3 écran ajouté Prévisions servies | attente < 2 s au 95ᵉ centile
 tab -> seau appellent
 seau -> prev laisse passer
 ```
@@ -59,7 +59,8 @@ Une ligne par élément ; `//` ouvre un commentaire.
   - `~1` à `~6` teinte le fond, pour grouper des nœuds d'une même famille.
   - Un fait se met après `|` : une ligne courte sous le libellé.
   - `> cible` : le clic zoome dans `cible.md`. D'autres cibles après la première prennent place juste après elle dans
-    l'ordre de lecture (← →). Les enfants d'une bulle sont ses cibles, dans l'ordre des lignes.
+    l'ordre de lecture (← →). Les enfants d'une bulle sont ses cibles, dans l'ordre des lignes. Une bulle n'a qu'un
+    parent : `carte.sh` refuse une cible nommée deux fois (« cible partagée »).
   - `@étiquette` : en zoomant depuis ce nœud, les nœuds de l'étage suivant qui portent la même étiquette se surlignent.
 - **Lien** : `a -> b verbe` en trait plein, `a ..> b verbe` en pointillé, pour une contrainte ou une mesure.
   `a c -> b verbe` relie plusieurs sources. Le verbe est court : il se lit sur la flèche.
@@ -72,7 +73,7 @@ d'une bande. Pour qu'elles ne se croisent pas, place les nœuds liés sur la mê
 - **Clic** sur un nœud qui a une cible, ou **Tab** puis **Entrée** : zoomer.
 - **Échap** ou **Retour arrière** : remonter. Un clic sur le fil d'Ariane, ou hors des nœuds et des cadres, aussi.
 - **← →** sur une feuille : la feuille voisine du même parent, sans remonter. On relit une MR feuille après feuille.
-- Le hash garde l'étage (`#index/composants/client-diff`) : un rechargement y revient.
+- Le hash garde l'étage (`#index/attente/client-diff`) : un rechargement y revient.
 
 ## La règle de l'écran
 
@@ -97,10 +98,12 @@ Les budgets, à 1200x900 :
    - **pendant** : ce que la MR ajoute ou change, souvent un `entonnoir` ou un `traitement`, et les `règle`s qui le
      contraignent, en pointillé ;
    - **après** : ce que la personne voit désormais, et la preuve (essai, mesure) en pointillé vers lui.
-   Chaque nœud zoome dans les composants, avec l'`@étiquette` du composant qu'il touche.
-2. **L'étage 1** (`composants.md`) montre qui appelle qui. Couloirs **Entrée**, **Traitement**, **Sortie**, et une
-   bande **À côté** pour les tests, la doc et les retouches mécaniques (renommages), que l'humain survole. Un nœud par
-   sujet, pas par fichier ; chacun zoome dans ses feuilles.
+   Chaque case zoome dans **sa propre** vue, jamais dans une vue commune : deux cases, deux cibles. Une case sans
+   détail à elle n'a pas de cible, et ne se clique pas.
+2. **L'étage 1** : une vue par case, cadrée sur le composant qu'elle touche. Couloirs **Entrée**, **Traitement**,
+   **Sortie** : le composant au centre, ses voisins de part et d'autre, sans cible. Une bande **À côté**, s'il y a
+   lieu, pour ses tests, sa doc et ses retouches mécaniques (renommages), que l'humain survole. Un nœud par sujet,
+   pas par fichier ; chacun zoome dans ses feuilles.
 3. **L'étage 2** : les feuilles, le diff coloré en blocs ` ```diff `. Une ligne `=== chemin/du/fichier` ouvre chaque
    fichier. La phrase sous le titre dit ce que montre le morceau.
 

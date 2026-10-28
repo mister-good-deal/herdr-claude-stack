@@ -14,6 +14,8 @@ for f in "$1"/*.md; do
         [[ $k != */* && -f $1/$k.md ]] || { echo "✗ $(basename "$f") : cible introuvable : $k.md" >&2; exit 5; }
     done
 done
+k=$(sed -n '/^```carte/,/^```$/{/ > /s/.* > //p}' "$1"/*.md | tr ' ' '\n' | sort | uniq -d | head -1)
+[[ -z $k ]] || { echo "✗ cible partagée : $k.md a plusieurs parents, une vue par case" >&2; exit 5; }
 titre=${2:-$(basename "$(cd "$1" && pwd)")}
 dir=/tmp/claude-$(id -u)/montrer
 mkdir -p "$dir"
