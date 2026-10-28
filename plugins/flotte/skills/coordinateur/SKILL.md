@@ -7,8 +7,10 @@ description: "Mener une flotte de lieutenants (agents Claude Code dans des panes
 
 L'humain parle au coordinateur, et à lui seul. Le coordinateur découpe le travail, tranche ce qui est à lui, remonte le
 reste et fait travailler des **lieutenants** : un agent herdr `lt-<sujet>` par lot, chacun dans son worktree et sur sa
-branche. Un lieutenant a ses propres sous-agents. La chaîne ne se court-circuite pas : un sous-agent rend son travail à
-son lieutenant, et un lieutenant ne parle qu'au coordinateur.
+branche. Un lieutenant fait travailler ses lots par **ses sous-agents** : l'outil de délégation de son moteur (l'outil
+`Agent` de Claude Code), des sous-processus de sa session, **jamais de nouvelles sessions herdr**. La barre herdr de
+l'humain ne montre ainsi que le coordinateur et ses lieutenants. La chaîne ne se court-circuite pas : un sous-agent rend
+son travail à son lieutenant, et un lieutenant ne parle qu'au coordinateur.
 
 **Les règles du projet passent avant cette skill** : rail git, gates, fiches, gabarits. Lis d'abord le fichier
 d'instructions du projet (`AGENTS.md` ou `CLAUDE.md`), son protocole de flotte s'il en a un (par exemple
@@ -35,6 +37,8 @@ Les scripts sont à côté de ce fichier, dans le dossier de base de la skill, q
    `LT_AUTOCOMPACT`). Les sous-agents d'un lieutenant tournent en Sonnet. Les relectures du coordinateur sont en Opus.
 3. Le nom de **session** du lieutenant, celui de `SendMessage`, apparaît dans `ListAgents`. Il commence par le nom du
    dossier de son worktree.
+4. Si `herdr agent list` ou `ListAgents` montre une session de lot ouverte par un lieutenant, demande-lui de la finir au
+   commit local, de la fermer par herdr et de passer le lot à un sous-agent.
 
 Un lieutenant n'est pas un démon. Au retour de l'humain ou après un redémarrage :
 - fais `herdr agent list`, et `herdr --machine <profil> agent list` pour chaque machine distante ;

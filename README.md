@@ -57,6 +57,8 @@ humain ──► coordinateur ──herdr agent prompt──► lt-<sujet> (work
   - Il fait relire leurs MR par un sous-agent Opus et vérifie chaque bloquant dans le code.
   - Il arme les merges et remonte à l'humain ce qui est à lui.
 - **Un lieutenant** travaille un lot dans son worktree.
+  - Il délègue à ses sous-agents (outil `Agent` de Claude Code), jamais à de nouvelles sessions herdr : la barre herdr
+    de l'humain ne montre que le coordinateur et les lieutenants.
   - Il poste sa G1 avant de coder, passe ses gates et fait UN push, puis rend compte par `SendMessage`.
   - Le message arrive sans toucher à la saisie de l'humain : c'est la raison de ce canal.
 - **Le coordinateur écrit aux lieutenants par `herdr agent prompt`**, dans leur pane, où personne ne tape. Il n'écrit

@@ -182,11 +182,13 @@ message describes that milestone's slice, not the whole feature.
       branch. The coordinator ticks the tasks in tasks.md and in each lot's issue as they complete. Then
       `speckit-converge` (full scope): it appends a `Phase N: Convergence` to tasks.md with the unbuilt work;
       implement those tasks the same way, and rerun converge until it reports « Converged ».
-    - **Fleet mode** — one agent **session** per lot (its issue), each in its own worktree and branch cut per the
-      VCS note, launched by the coordinator with the lot's full context: the issue URL, its task subset, the paths
-      of spec/plan/tasks, the branch, the gates, the issue-lifecycle rules below. Each lot agent runs the same loop
+    - **Fleet mode** — one **sub-agent** per lot (its issue), each in its own worktree and branch cut per the VCS
+      note, launched by the coordinator through its engine's delegation tool (Claude Code's `Agent` tool: a
+      sub-process of the coordinator's session, **never** a new terminal, pane or herdr session) with the lot's full
+      context: the absolute worktree path, the issue URL, its task subset, the paths of spec/plan/tasks, the branch,
+      the gates, the issue-lifecycle rules below. Each lot agent runs the same loop
       **scoped to its lot** — `speckit-converge` with the scope as args (« scope: US2, T017–T021 ») — before its
-      MR, opened per the project's coordination runbook, then a message to the coordinator; the coordinator
+      MR, opened per the project's coordination runbook, then its report to the coordinator; the coordinator
       reviews, orders and merges per that runbook. After the **last** lot merges, the coordinator runs a **full**
       converge on the integration branch; if it appends tasks, they become a « Convergence » lot (an issue per
       step 7, an agent, an MR).

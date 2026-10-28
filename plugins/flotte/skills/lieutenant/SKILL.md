@@ -19,6 +19,20 @@ Ta mission te donne :
 2. le brief de la release et ta ligne du brief des lots ;
 3. ta mémoire de lot, si elle existe.
 
+## Tes sous-agents
+
+- Tu délègues un lot, une relecture ou une recherche par l'outil de délégation de ton moteur : l'outil `Agent` de
+  Claude Code, en Sonnet. C'est un sous-processus de ta session.
+- **Jamais une nouvelle session** : ni `herdr agent start`, ni nouveau pane, ni `claude` lancé dans un autre terminal.
+  L'humain ne doit voir dans sa barre herdr que le coordinateur et ses lieutenants. La règle vaut même si un document du
+  projet dit de lancer un agent herdr par lot : signale alors l'écart au coordinateur.
+- Un sous-agent de lot travaille dans le worktree de son lot. Tu le crées (`git worktree add`), puis tu donnes au
+  sous-agent son chemin absolu, l'issue, ses tâches et les gates.
+- Il te rend un rapport. Relis son diff et rejoue les gates : son « fini » ne suffit pas. Pour un aller-retour (G1,
+  retouche), reprends-le par `SendMessage` avec son id.
+- Le push, la MR et les comptes rendus au coordinateur restent chez toi.
+- Sans outil de délégation, tu fais tes lots toi-même, l'un après l'autre.
+
 ## Rendre compte
 
 - Par **`SendMessage`**, vers le nom de session du coordinateur. Il est dans ta mission ; sinon, `ListAgents` le donne
