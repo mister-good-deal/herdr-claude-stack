@@ -142,16 +142,28 @@ CSS
         printf '<script type="application/json" id="statuts">{%s}</script>\n' \
             "$(awk -F'\t' '{ s[$1] = $1 in s && s[$1] != $2 ? "M" : $2 }
                 END { for (k in s) printf "%s\"%s\":\"%s\"", n++ ? "," : "", k, s[k] }' "$mr")"
+        # Les feuilles d'un nœud : son diff, coupé entre deux hunks, ou à une ligne vide, vers 30 lignes.
         for k in $(cut -f1 "$mr" | sort -u); do
-            mapfile -t fs < <(awk -F'\t' -v k="$k" '$1 == k { print $3 }' "$mr")
-            printf '<script type="text/markdown" data-id="%s">\n# `%s` · %d fichiers\n\n' "$(esc "${k/\//\~}")" \
-                "$k" "${#fs[@]}"
-            for p in "${fs[@]}"; do
-                printf '=== %s\n\n````diff\n' "$p"
-                git -C "$top" diff --no-renames "$base"... -- "$p" | sed '1,/^+++ /d'
-                printf '````\n\n'
-            done | sed 's#</#<\\/#g;s#<!--#<\\!--#g'
-            printf '</script>\n'
+            awk -F'\t' -v k="$k" '$1 == k { print $3 }' "$mr" | while read -r p; do
+                echo "=== $p"; git -C "$top" diff --no-renames "$base"... -- "$p" | sed '1,/^+++ /d'
+            done | awk -v u=0 -v k="$k" -v id="${k/\//\~}" '
+                function cut() { if (L[u]) u++ }
+                { gsub(/<\//, "<\\/"); gsub(/<!--/, "<\\!--") }
+                /^=== / { cut(); p = substr($0, 5); next }
+                /^@@/ || L[u] >= 16 && /^[ +-]?$/ || L[u] >= 26 { cut() }
+                { F[u] = p; T[u] = T[u] $0 "\n"; L[u] += 1 + int((length() - 1) / 120) }
+                END {
+                    cut()
+                    for (i = 0; i < u; i++) {
+                        if (!n || c + L[i] + 3 * (F[i] != q) > 30) { n++; c = 0; q = "" }
+                        if (F[i] != q && (c += 3))
+                            P[n] = P[n] (q == "" ? "" : "````\n\n") "=== " (q = F[i]) "\n\n````diff\n"
+                        P[n] = P[n] T[i]; c += L[i]
+                    }
+                    for (i = 1; i <= n; i++)
+                        printf "<script type=\"text/markdown\" data-id=\"%s~%d\">\n# `%s` · %d/%d\n\n%s",
+                            id, i, k, i, n, P[i] "````\n</script>\n"
+                }'
         done
     fi
     rm -f "$globs" "$mr"
@@ -222,7 +234,7 @@ function touche(id) {
         const s = n.kids.length ? n.kids.flatMap(touche) : ST[`${id}/${n.id}`] ? [ST[`${id}/${n.id}`]] : [];
         if (!s.length) { n.plie = true; n.kids = []; continue; }
         n.statut = STV[s.every(x => x === s[0]) ? s[0] : "M"];
-        if (!n.kids.length) n.kids = [`${id}~${n.id}`];
+        if (!n.kids.length) n.kids = Object.keys(B).filter(k => k.startsWith(`${id}~${n.id}~`));
         vu[id].push(...s);
     }
     B[id].kids = [...new Set(B[id].schema?.nodes.flatMap(n => n.kids) ?? [])];

@@ -123,7 +123,8 @@ dans un dossier, `**` les traverse) : `core traitement 1-3 Orchestrateur = crate
 - À la génération, `carte.sh` compte la couverture sur `git ls-files` : les fichiers sans nœud, ceux de plusieurs
   nœuds, les nœuds sans fichier. Il signale, il ne bloque pas.
 - `--mr <base>` lit `git diff <base>...` : chaque nœud prend le statut de ses fichiers (ou de ses bulles enfants), un
-  nœud que la MR ne touche pas se plie, et un nœud feuille touché zoome dans le diff de ses fichiers. Les fichiers du
+  nœud que la MR ne touche pas se plie, et un nœud feuille touché zoome dans le diff de ses fichiers, coupé en
+  feuilles de 30 lignes environ, entre deux hunks. Les fichiers du
   diff sans nœud sont listés : corrige la carte ou passe outre.
 - `--vision mr.md` pose `mr.md` au-dessus de `index.md` : l'avant et l'après de la MR, dont un nœud vise `index`.
 
