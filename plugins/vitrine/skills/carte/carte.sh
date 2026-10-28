@@ -2,10 +2,17 @@
 # Montre une carte à zoom sémantique dans le navigateur du pane de droite (terminal-browser) : une bulle par fichier
 # markdown du dossier, index.md pour la racine. Une bulle à bloc ```carte est un schéma en couloirs ; un clic sur un
 # nœud zoome dans la bulle qu'il vise. Une bulle sans schéma est une feuille. Thème Nord de ../lire/nord.css.
-#   carte.sh <dossier> ["Titre"]
+#   carte.sh [--mr <base>] [--vision <mr.md>] <dossier> ["Titre"]
+# --mr colore les nœuds que touche git diff <base>... et ouvre leur diff ; --vision pose mr.md au-dessus de index.md.
 set -euo pipefail
+base='' vision=''
+while [[ ${1-} == --* ]]; do
+    case $1 in --mr) base=${2:?} ;; --vision) vision=${2:?} ;; *) sed -n '5p' "$0" >&2; exit 2 ;; esac
+    shift 2
+done
 [ $# -ge 1 ] || { sed -n '5p' "$0" >&2; exit 2; }
 [ -f "$1/index.md" ] || { echo "✗ pas de index.md dans : $1" >&2; exit 4; }
+[[ -z $vision || -f $vision ]] || { echo "✗ vision introuvable : $vision" >&2; exit 4; }
 command -v terminal-browser > /dev/null || { echo "✗ terminal-browser absent du PATH" >&2; exit 3; }
 
 esc() { local s=${1//&/&amp;}; s=${s//</&lt;}; s=${s//\"/&quot;}; printf '%s' "${s//>/&gt;}"; }
@@ -20,6 +27,53 @@ titre=${2:-$(basename "$(cd "$1" && pwd)")}
 dir=/tmp/claude-$(id -u)/montrer
 mkdir -p "$dir"
 page=$dir/$(date +%Y%m%d-%H%M%S)-$$-carte.html
+# Couverture : chaque fichier suivi du dépôt tombe dans un seul nœud, par les globs « = ».
+# « hors » écarte des fichiers.
+# Un écart se signale, il ne bloque pas. Avec --mr, chaque fichier du diff colore son nœud.
+top=$(git -C "$1" rev-parse --show-toplevel 2> /dev/null || true)
+globs=$dir/$$-globs mr=$dir/$$-mr
+for f in "$1"/*.md; do
+    sed -n -e '/^```carte/,/^```$/{s/ > .*//;s/^ *hors /- /p' \
+        -e '/ = /s/^ *\([^ ]*\) .* = /'"$(basename "$f" .md)"'\/\1 /p}' "$f"
+done > "$globs"
+: > "$mr"
+if [[ -n $top ]] && grep -qv '^- ' "$globs"; then
+    [[ -z $base ]] || git -C "$top" diff --no-renames --name-status "$base"... > "$mr"
+    git -C "$top" ls-files | awk -v mr="$mr" '
+        function re(g) {
+            gsub(/[.+^$(){}|\\[\]]/, "\\\\&", g); gsub(/\*\*\//, "\001", g); gsub(/\*\*/, "\002", g)
+            gsub(/\*/, "[^/]*", g); gsub(/\?/, "[^/]", g); gsub(/\001/, "(.*/)?", g); gsub(/\002/, ".*", g)
+            return "^" g "$"
+        }
+        function of(p,   i, s) {
+            s = " "
+            for (i = 1; i <= n; i++) if (p ~ R[i] && !index(s, " " K[i] " ")) s = s K[i] " "
+            return index(s, " - ") ? "-" : substr(s, 2, length(s) - 2)
+        }
+        NR == FNR { for (i = 2; i <= NF; i++) { K[++n] = $1; R[n] = re($i) }; if ($1 != "-") G[$1]; next }
+        { k = of($0) }
+        k == "-" { next }
+        { t++ }
+        k == "" { sans[++ns] = $0; next }
+        k ~ / / { plus[++np] = $0 " : " k; next }
+        { vu[k] }
+        END {
+            FS = "\t"
+            while ((getline l < mr) > 0) {
+                split(l, a); k = of(a[2]); s = a[1] ~ /^[AD]/ ? a[1] : "M"
+                if (k == "-") continue
+                if (k == "" || k ~ / /) { hors[++nh] = a[2]; continue }
+                print k "\t" s "\t" a[2]
+            }
+            printf "couverture : %d fichiers, %d sans nœud, %d dans plusieurs nœuds\n", t, ns, np > "/dev/stderr"
+            for (i = 1; i <= ns && i <= 20; i++) print "  sans nœud : " sans[i] > "/dev/stderr"
+            if (ns > 20) print "  … et " ns - 20 " autres" > "/dev/stderr"
+            for (i = 1; i <= np && i <= 20; i++) print "  plusieurs : " plus[i] > "/dev/stderr"
+            for (k in G) if (!(k in vu)) print "  nœud sans fichier : " k > "/dev/stderr"
+            for (i = 1; i <= nh; i++) print "  diff sans nœud : " hors[i] > "/dev/stderr"
+        }' "$globs" - > "$mr.k"
+    mv "$mr.k" "$mr"
+fi
 {
     printf '<!doctype html><html lang="fr"><meta charset="utf-8"><title>%s</title>\n' "$(esc "$titre")"
     printf '<meta name="viewport" content="width=device-width, initial-scale=1">\n<style>\n'
@@ -70,6 +124,7 @@ svg text { fill: var(--text); font: 15px var(--font-text); }
 .lane text { fill: var(--muted); font-size: 13px; letter-spacing: .1em; }
 .node[data-k] { cursor: zoom-in; outline: none; }
 .node[data-k]:hover > path, .node[data-k]:focus > path { stroke-width: 3.5; }
+.node.plie { opacity: .35; }
 .node.hl > path { stroke: var(--nord8) !important; stroke-width: 4; }
 CSS
     printf '</style>\n<base target="_blank">\n<div id="back" inert></div><div id="stage"></div>\n'
@@ -78,6 +133,28 @@ CSS
         sed 's#</#<\\/#g;s#<!--#<\\!--#g' "$f"
         printf '</script>\n'
     done
+    if [[ -n $vision ]]; then
+        printf '<script type="text/markdown" data-id="mr">\n'
+        sed 's#</#<\\/#g;s#<!--#<\\!--#g' "$vision"
+        printf '</script>\n'
+    fi
+    if [[ -n $base ]]; then
+        printf '<script type="application/json" id="statuts">{%s}</script>\n' \
+            "$(awk -F'\t' '{ s[$1] = $1 in s && s[$1] != $2 ? "M" : $2 }
+                END { for (k in s) printf "%s\"%s\":\"%s\"", n++ ? "," : "", k, s[k] }' "$mr")"
+        for k in $(cut -f1 "$mr" | sort -u); do
+            mapfile -t fs < <(awk -F'\t' -v k="$k" '$1 == k { print $3 }' "$mr")
+            printf '<script type="text/markdown" data-id="%s">\n# `%s` · %d fichiers\n\n' "$(esc "${k/\//\~}")" \
+                "$k" "${#fs[@]}"
+            for p in "${fs[@]}"; do
+                printf '=== %s\n\n````diff\n' "$p"
+                git -C "$top" diff --no-renames "$base"... -- "$p" | sed '1,/^+++ /d'
+                printf '````\n\n'
+            done | sed 's#</#<\\/#g;s#<!--#<\\!--#g'
+            printf '</script>\n'
+        done
+    fi
+    rm -f "$globs" "$mr"
     printf '<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>\n'
     printf '<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>\n'
     cat << 'JS'
@@ -101,7 +178,8 @@ function parse(src) {
             for (const f of m[1].split(/\s+/)) S.links.push({ f, t: m[3], verbe: m[4], faible: m[2] === ".." });
             continue;
         }
-        const [txt, cible = ""] = l.split(/\s+>\s+/), tok = txt.split(/\s+/);
+        if (/^hors\s/.test(l)) continue;
+        const [avant, cible = ""] = l.split(/\s+>\s+/), txt = avant.split(/\s+=\s+/)[0], tok = txt.split(/\s+/);
         const pos = tok[2]?.match(/^(\d+)(?:-(\d+))?$/);
         if (!S.lanes[tok[1]] || !pos || +pos[1] < 1 || +(pos[2] ?? pos[1]) < +pos[1])
             { S.errs.push(`ligne illisible : ${l}`); continue; }
@@ -134,6 +212,23 @@ for (const s of document.querySelectorAll("script[data-id]")) {
     B[s.dataset.id] = { titre, texte: lines.join("\n").trim(), schema,
         kids: [...new Set(schema?.nodes.flatMap(n => n.kids) ?? [])] };
 }
+// --mr : un nœud prend le statut de ses fichiers, ou de ses bulles enfants ; un nœud que la MR ne touche pas se plie.
+const ST = JSON.parse(document.getElementById("statuts")?.textContent ?? "null"), ROOT = B.mr ? "mr" : "index";
+const STV = { A: "ajouté", M: "modifié", D: "retiré" }, vu = {};
+function touche(id) {
+    if (id in vu || !B[id]) return vu[id] ?? [];
+    vu[id] = [];
+    for (const n of B[id].schema?.nodes ?? []) {
+        const s = n.kids.length ? n.kids.flatMap(touche) : ST[`${id}/${n.id}`] ? [ST[`${id}/${n.id}`]] : [];
+        if (!s.length) { n.plie = true; n.kids = []; continue; }
+        n.statut = STV[s.every(x => x === s[0]) ? s[0] : "M"];
+        if (!n.kids.length) n.kids = [`${id}~${n.id}`];
+        vu[id].push(...s);
+    }
+    B[id].kids = [...new Set(B[id].schema?.nodes.flatMap(n => n.kids) ?? [])];
+    return vu[id];
+}
+if (ST) touche("index");
 const NS = "http://www.w3.org/2000/svg";
 function el(tag, attrs, parent) {
     const e = document.createElementNS(NS, tag);
@@ -207,7 +302,8 @@ function route(a, b) {
     if (U) return bend("t", "b", a.L.y - G / 4, true);
 }
 function node(svg, n) {
-    const g = el("g", { class: `node s-${STAT[n.statut] ?? "same"}`, transform: `translate(${n.x} ${n.y})` }, svg);
+    const g = el("g", { class: `node s-${STAT[n.statut] ?? "same"}${n.plie ? " plie" : ""}`,
+        transform: `translate(${n.x} ${n.y})` }, svg);
     g.dataset.tags = n.tags.join(" ");
     if (n.kids.length) g.dataset.k = n.kids[0], g.dataset.kids = n.kids.join(" "), g.tabIndex = 0;
     const p = el("path", { d: SHAPE[n.nature](n.w, n.h) }, g);
@@ -264,8 +360,8 @@ const md = s => marked.parse(s);
 function path() {
     let h = "";
     try { h = decodeURIComponent(location.hash.slice(1)); } catch {}
-    const [root, ...ids] = h.split("/"), p = ["index"];
-    if (root === "index") for (const id of ids) { if (!B[p.at(-1)].kids.includes(id)) break; p.push(id); }
+    const [root, ...ids] = h.split("/"), p = [ROOT];
+    if (root === ROOT) for (const id of ids) { if (!B[p.at(-1)].kids.includes(id)) break; p.push(id); }
     return p;
 }
 let shown = [];

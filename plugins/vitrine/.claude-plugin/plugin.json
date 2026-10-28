@@ -1,6 +1,6 @@
 {
   "name": "vitrine",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Montrer à l'humain dans un pane à droite : images côte à côte, document markdown en thème Nord, carte à zoom sémantique pour relire une MR sur un seul écran et écran vivant de l'app web, via terminal-browser ; disposer l'onglet herdr selon la situation.",
   "author": { "name": "Romain Laneuville" },
   "license": "MIT"

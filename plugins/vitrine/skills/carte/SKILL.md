@@ -113,6 +113,20 @@ Un composant trop gros pour un étage reçoit son propre schéma (même forme qu
 d'une fonction. Remplis une feuille avant d'en ouvrir une autre. Chaque ligne du diff est sur une feuille, et sur une
 seule : l'humain doit pouvoir relire toute la MR depuis la carte.
 
+
+## Carte d'un dépôt, et une MR dessus
+
+Une carte peut couvrir tout un dépôt. Chaque nœud feuille dit ses fichiers après ` = `, en globs (`*` et `?` restent
+dans un dossier, `**` les traverse) : `core traitement 1-3 Orchestrateur = crates/core/**`. Une ligne
+`hors <glob…>` écarte des fichiers (vendor, fixtures). ` = ` devient réservé, comme ` > `.
+
+- À la génération, `carte.sh` compte la couverture sur `git ls-files` : les fichiers sans nœud, ceux de plusieurs
+  nœuds, les nœuds sans fichier. Il signale, il ne bloque pas.
+- `--mr <base>` lit `git diff <base>...` : chaque nœud prend le statut de ses fichiers (ou de ses bulles enfants), un
+  nœud que la MR ne touche pas se plie, et un nœud feuille touché zoome dans le diff de ses fichiers. Les fichiers du
+  diff sans nœud sont listés : corrige la carte ou passe outre.
+- `--vision mr.md` pose `mr.md` au-dessus de `index.md` : l'avant et l'après de la MR, dont un nœud vise `index`.
+
 ## Règles
 
 - La carte vit dans le scratchpad. Le code d'un projet privé n'entre jamais dans un dépôt public.
