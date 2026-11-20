@@ -32,7 +32,8 @@ chargement :
 - Les titres portent leurs ancres à la GitLab : minuscules, ponctuation retirée, espaces en tirets, tirets réduits.
 - Un lien relatif (`./page.md#ancre`) se résout contre `LIRE_BASE`, sans le `.md`. Pour un brouillon de page du wiki
   GitLab : `LIRE_BASE=https://<gitlab>/<groupe>/<projet>/-/wikis/<section>/`. Sans `LIRE_BASE`, il se résout contre
-  le dossier du fichier.
+  le dossier du fichier. Une image relative (`![](img/capture.png)`) se résout de même : elle reste à côté du
+  markdown, inutile de la copier.
 
 ## Liens vers les issues
 
