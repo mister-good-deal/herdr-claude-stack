@@ -19,6 +19,32 @@ d'instructions du projet (`AGENTS.md` ou `CLAUDE.md`), son protocole de flotte s
 Les scripts sont à côté de ce fichier, dans le dossier de base de la skill, que Claude Code indique au chargement. Ci-dessous,
 `$SKILL` désigne ce dossier.
 
+## La config de la flotte
+
+`.claude/flotte.json`, à la racine du projet et **commité**, fixe le modèle et l'effort par défaut des lieutenants et de
+leurs sous-agents :
+
+```json
+{
+  "lieutenant": { "model": "opus", "effort": "medium" },
+  "sousAgent": { "model": "sonnet", "effort": "medium" }
+}
+```
+
+- `model` : un alias (`fable`, `opus`, `sonnet`, `haiku`). Un identifiant complet passe pour `lieutenant`, pas pour
+  `sousAgent`, car l'outil `Agent` ne prend que des alias.
+- `effort` : `low`, `medium`, `high`, `xhigh` ou `max`.
+
+Lis ce fichier avant de lancer un lieutenant. **S'il n'existe pas, tu ne choisis pas à la place de l'humain** :
+1. pose-lui les quatre questions par `AskUserQuestion` (modèle puis effort des lieutenants, modèle puis effort de
+   leurs sous-agents), l'option recommandée en premier ;
+2. écris le fichier avec ses réponses ;
+3. commite-le selon le rail git du projet, pour que les worktrees des lieutenants le reçoivent.
+
+`lancer-lieutenant.sh` lit `lieutenant` et refuse de lancer sans le fichier. Un lieutenant lit `sousAgent` dans son
+worktree. Si sa base ne porte pas encore le fichier, il te demande les valeurs : réponds-lui par `herdr agent prompt`
+avec celles de ta config. Pour changer un défaut, modifie le fichier avec l'accord de l'humain et commite-le.
+
 ## Lancer un lieutenant
 
 1. Écris sa mission dans un fichier. Elle dit :
@@ -33,8 +59,9 @@ Les scripts sont à côté de ce fichier, dans le dossier de base de la skill, q
 "$SKILL/lancer-lieutenant.sh" lt-cartes ~/Projects/app lt-cartes-12 origin/release/1.2.0 mission.md --machine portable
 ```
 
-   Par défaut, la session tourne en Opus 5.5, effort medium, `--autocompact 150000` (variables `LT_MODEL`, `LT_EFFORT`,
-   `LT_AUTOCOMPACT`). Les sous-agents d'un lieutenant tournent en Sonnet. Les relectures du coordinateur sont en Opus.
+   La session prend le modèle et l'effort de `lieutenant` dans la config de la flotte, et `--autocompact 150000`
+   (variable `LT_AUTOCOMPACT`). `LT_MODEL` et `LT_EFFORT` passent devant la config pour un lieutenant hors norme, à la
+   demande de l'humain. Les relectures du coordinateur sont en Opus.
 3. Le nom de **session** du lieutenant, celui de `SendMessage`, apparaît dans `ListAgents`. Il commence par le nom du
    dossier de son worktree.
 4. Si `herdr agent list` ou `ListAgents` montre une session de lot ouverte par un lieutenant, demande-lui de la finir au

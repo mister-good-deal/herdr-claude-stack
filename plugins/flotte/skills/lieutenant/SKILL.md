@@ -22,7 +22,11 @@ Ta mission te donne :
 ## Tes sous-agents
 
 - Tu délègues un lot, une relecture ou une recherche par l'outil de délégation de ton moteur : l'outil `Agent` de
-  Claude Code, en Sonnet. C'est un sous-processus de ta session.
+  Claude Code. C'est un sous-processus de ta session.
+- **Chaque sous-agent part avec le modèle et l'effort de la config de la flotte** : la clé `sousAgent` de
+  `.claude/flotte.json`, à la racine de ton worktree, donne les paramètres `model` et `effort` de l'outil `Agent`.
+  Si le fichier ou la clé manque, tu ne choisis pas toi-même : demande les valeurs au coordinateur, puis attends sa
+  réponse avant de lancer un sous-agent.
 - **Jamais une nouvelle session** : ni `herdr agent start`, ni nouveau pane, ni `claude` lancé dans un autre terminal.
   L'humain ne doit voir dans sa barre herdr que le coordinateur et ses lieutenants. La règle vaut même si un document du
   projet dit de lancer un agent herdr par lot : signale alors l'écart au coordinateur.
@@ -64,7 +68,7 @@ Ta mission te donne :
    à trancher, tu attends le go.
 3. **Test d'abord**, puis la preuve par le chemin réel : le corps des commandes, et des données réelles quand il y en a.
 4. **Gates locales complètes**, toutes vertes. Lis leur journal, pas seulement leur code de sortie. Ensuite, une
-   relecture indépendante par un sous-agent (Sonnet), avec une passe de simplicité.
+   relecture indépendante par un sous-agent, avec une passe de simplicité.
 5. **Un seul push**, sous l'accord que fixe le projet.
    - MR vers la branche de release, avec `Ref #N`, jamais `Closes`.
    - La fiche suit le gabarit du projet, cases cochées.

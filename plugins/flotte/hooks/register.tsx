@@ -1,21 +1,22 @@
 import type { Register } from 'claude-code'
 
-const PROMPT = /\bherdr\b(?:\s+--machine\s+\S+)?\s+agent\s+prompt\s+["']?([^\s"']+)/
+// 1 : la cible du prompt ; 2 : un message qui commence par « ! », que le pane du lieutenant lancerait comme commande shell
+// au lieu de le donner à lire à Claude.
+const PROMPT = /\bherdr\b(?:\s+--machine\s+\S+)?\s+agent\s+prompt\s+["']?([^\s"']+)["']?(\s+["']?\s*!)?/
 const PAR_MOTIF = /(^|[\s;&|(])(pkill|killall)\b/
-// Dans le pane du lieutenant, un message qui commence par « ! » part au shell au lieu d'être lu par Claude.
-const BANG = /\bherdr\b(?:\s+--machine\s+\S+)?\s+agent\s+prompt\s+["']?[^\s"']+["']?\s+["']?\s*!/
 
 export const register: Register = on => {
-  // Garde-fous : un prompt herdr ne vise qu'un lieutenant, et un processus ne s'arrête que par son PID.
+  // Garde-fous : un prompt herdr ne vise qu'un lieutenant et ne commence pas par « ! », et un processus ne s'arrête que
+  // par son PID.
   on('tool.call', { tool: 'Bash' }, ($, e, next) => {
-    const cible = PROMPT.exec(e.command)?.[1]
+    const [, cible, bang] = PROMPT.exec(e.command) ?? []
     if (cible && !cible.startsWith('lt-')) {
       return {
         deny: `flotte : herdr agent prompt ne vise qu'un lieutenant (lt-…), jamais « ${cible} ». `
           + 'Pour écrire au coordinateur, utilise SendMessage.',
       }
     }
-    if (BANG.test(e.command)) {
+    if (bang) {
       return { deny: 'flotte : un prompt herdr ne commence jamais par « ! », qui le lance comme commande shell. Écris « La MR 1196… ».' }
     }
     if (PAR_MOTIF.test(e.command)) {

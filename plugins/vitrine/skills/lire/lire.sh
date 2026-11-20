@@ -5,7 +5,8 @@
 #   lire.sh fichier.md ["Titre"]
 # Les « #123 » deviennent des liens vers les issues du dépôt git du fichier, sinon du dossier courant (GitLab ou GitHub,
 # lu sur `origin`), ou vers LIRE_ISSUES (préfixe d'URL) s'il est défini.
-# Les blocs mermaid se rendent en schémas (mermaid, CDN, versions figées) ; un grand schéma se zoome et se déplace. Les titres portent leurs ancres à la GitLab.
+# Les blocs mermaid se rendent en schémas (mermaid, CDN, versions figées) ; un grand schéma se zoome et se déplace.
+# Les titres portent leurs ancres à la GitLab.
 # Les liens relatifs se résolvent contre LIRE_BASE (préfixe d'URL, « .md » retiré, pour pointer vers un wiki), sinon
 # contre le dossier du fichier.
 set -euo pipefail
