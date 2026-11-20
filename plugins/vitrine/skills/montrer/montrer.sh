@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Montre des images à Romain dans le navigateur du pane de droite (terminal-browser) : une page, les images côte à côte,
+# Montre des images à l'humain dans le navigateur du pane de droite (terminal-browser) : une page, les images côte à côte,
 # chacune avec sa légende. Le même navigateur sert à chaque appel, une page = un onglet.
 #   montrer.sh [--titre "Titre"] image[=légende] [image[=légende] ...]
 set -euo pipefail

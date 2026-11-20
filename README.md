@@ -11,10 +11,10 @@ Les plugins sont écrits en français et tirés d'un vrai projet. Ils supposent 
 
 | Plugin | Contenu | Pour |
 |---|---|---|
-| **`flotte`** | skills `coordinateur` et `lieutenant`, scripts `lancer-lieutenant.sh` et `veille-boite.sh`, garde-fous (mod) | mener des lieutenants : un par lot, chacun dans son worktree herdr, avec une G1 avant le code, une relecture indépendante, un push et une MR par lot |
+| **`flotte`** | skills `coordinateur` et `lieutenant`, scripts `lancer-lieutenant.sh` et `veille-boite.sh`, config `.claude/flotte.json` par projet, garde-fous (mod) | mener des lieutenants : un par lot, chacun dans son worktree herdr, avec une G1 avant le code, une relecture indépendante, un push et une MR par lot |
 | **`vitrine`** | skills `montrer`, `lire`, `carte`, `apercu` et `disposition` | montrer à l'humain des images côte à côte, un document markdown en thème Nord (pages de validation comprises), une carte à zoom sémantique pour relire une MR sur un seul écran, ou un écran vivant de l'app web qu'il peut cliquer, dans terminal-browser à droite ; disposer l'onglet herdr pour lire, comparer des variantes ou suivre des journaux |
 | **`chantier`** | skills `dev-workflow`, `bug-workflow` et `idea-workflow` | mener une feature, un bug ou une idée sur Spec-Kit 1.2+, de la description à la MR, avec des gates humaines montrées en page |
-| **`usage-limits`** | footer (mod) | voir le compte et son forfait, les messages envoyés, le contexte et les limites 5h et hebdo sans quitter la conversation |
+| **`usage-limits`** | footer (mod) | voir le compte et son forfait, les messages envoyés, le contexte, la fenêtre d'auto-compact, les limites d'abonnement, le modèle et son effort sans quitter la conversation |
 
 ## Installer
 
@@ -63,6 +63,20 @@ humain ──► coordinateur ──herdr agent prompt──► lt-<sujet> (work
   - Le message arrive sans toucher à la saisie de l'humain : c'est la raison de ce canal.
 - **Le coordinateur écrit aux lieutenants par `herdr agent prompt`**, dans leur pane, où personne ne tape. Il n'écrit
   jamais par ce canal vers le pane de l'humain, et le mod `flotte` le refuse.
+- **Une config par projet** : `.claude/flotte.json`, commité, fixe le modèle et l'effort par défaut des lieutenants et de
+  leurs sous-agents.
+
+  ```json
+  {
+    "lieutenant": { "model": "opus", "effort": "medium" },
+    "sousAgent": { "model": "sonnet", "effort": "medium" }
+  }
+  ```
+
+  - Le coordinateur la lit avant de lancer un lieutenant. Si elle manque, il la crée avec l'humain, en lui posant les
+    questions, et `lancer-lieutenant.sh` refuse de lancer sans elle.
+  - Un lieutenant lance ses sous-agents avec `sousAgent`. Si son worktree n'a pas le fichier, il demande les valeurs au
+    coordinateur.
 - **Les règles du projet passent avant les skills.** Les skills ne gardent que la mécanique et renvoient au fichier
   d'instructions du projet (`AGENTS.md` ou `CLAUDE.md`) pour le rail git, les gates et les fiches.
 
@@ -81,25 +95,32 @@ humain ──► coordinateur ──herdr agent prompt──► lt-<sujet> (work
 
 ## Le mod de `flotte`
 
-Deux garde-fous sur le shell :
+Trois garde-fous sur le shell :
 - `herdr agent prompt` ne vise qu'un lieutenant (`lt-…`) ;
+- son message ne commence jamais par `!`, que le pane du lieutenant lancerait comme commande shell ;
 - `pkill` et `killall` sont refusés : un processus s'arrête par son PID.
 
 ## Le mod `usage-limits`
 
 Il remplace le footer de la session : le compte actif et son forfait au centre, puis à droite les messages envoyés, le
-contexte et l'utilisation des limites d'abonnement.
+contexte et l'utilisation des limites d'abonnement. Il ajoute le modèle et son effort au bout de la ligne du bas.
 
 ```
-☺  you@example.com / Claude Max x20          ❯  12 │ ⛁  84k/200k │ ⁵ʰ◑ 42% ↻ 2h13 │ ⁷ʲ◔ 18%
+                         ☺  you@example.com / Claude Ultra          ❯  12 │ ⛁  84k/1M ⇥ 500k │ ⁷ʲ◔ 18% ↻ ven. 27 00:00
+⏵⏵ auto mode on · Fable 5.2 · high
 ```
 
-- `☺` : email du compte connecté et son forfait (`Claude Pro`, `Claude Max x5`, `Claude Max x20`…), lus dans
-  `~/.claude.json` (`oauthAccount`) et relus après chaque réponse.
+- `☺` : email du compte connecté et son forfait (`Claude Pro`, `Claude Max x5`, `Claude Ultra`…), lus dans
+  `~/.claude.json` (`oauthAccount`) et relus après chaque réponse. Le forfait est le `planDisplayName` du compte.
 - `❯` : messages envoyés dans la session, tapés ou par Remote Control ; `/clear` remet le compte à zéro.
-- `⛁` : tokens du contexte actuel / taille de la fenêtre.
-- `⁵ʰ` : fenêtre de 5h, % utilisé et temps avant le reset.
-- `⁷ʲ` : fenêtre hebdomadaire, % utilisé.
+- `⛁` : tokens du contexte actuel / taille de la fenêtre du modèle.
+- `⇥` : fenêtre d'auto-compact, en tokens (`--autocompact`, réglage `autoCompactWindow`) ; absente si l'auto-compact
+  est coupé.
+- `⁵ʰ` : fenêtre de 5h, % utilisé et temps avant le reset. Elle n'apparaît que si l'API la remonte, et jamais sur
+  `Claude Ultra`, qui n'en a plus.
+- `⁷ʲ` : fenêtre hebdomadaire, % utilisé et date du reset, à l'heure locale de la machine.
+- En bas à gauche, après la ligne de Claude Code : le modèle de la session et son niveau d'effort. L'effort apparaît à
+  la première requête de la session, car c'est elle qui le porte.
 - Couleurs du thème : vert sous 50 %, orange sous 80 %, rouge au-delà (jauges `○◔◑◕●` et contexte).
 
 Les % viennent de la dernière réponse de l'API, mise à jour à chaque réponse ; le compte à rebours avance toutes les
