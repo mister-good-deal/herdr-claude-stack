@@ -101,10 +101,23 @@ Un lieutenant n'est pas un démon. Au retour de l'humain ou après un redémarra
    - **Vérifie chaque bloquant dans le code avant de le relayer.**
    - Écris tes décisions dans un fichier et envoie-en le chemin.
    - Les retouches partent en UN push.
-3. **Merge.** Fusion automatique, en squash, au vert du pipeline.
+3. **Merge.** Fusion automatique au vert du pipeline. **Une MR en CI, une MR en attente au plus** : les lots qui
+   attendent partent ensemble, jamais à la file.
+   - Aucune MR en CI : le lot part seul. Ton accord dit « ouvre ta MR », tu l'armes en squash.
+   - Une MR est en CI depuis moins de la moitié de la durée moyenne d'un pipeline de MR (les dix derniers verts) :
+     annule son pipeline, réunis les deux lots dans une **MR groupée**, relance.
+   - Sinon le lot attend, et tous ceux qui arrivent pendant l'attente entrent dans la même MR groupée, que tu ouvres
+     dès que la MR en cours a mergé. Un lieutenant dont le lot attend pousse sa branche nue, sans MR.
+   - **La MR groupée, c'est toi qui l'assembles** : une branche coupée de la release fraîche, un commit par lot
+     (`git merge --squash <branche du lot>`, titre du lot et `Ref #N`), une fiche par lot dans la description,
+     fusion SANS squash pour garder un commit par lot. Une MR déjà ouverte qui entre dans un groupe est fermée avec
+     un renvoi.
+   - Conflit à l'assemblage, ou attendu partagé entre deux lots (fichier généré, empreinte) : le lot arrivé le
+     dernier est rebasé par son lieutenant sur la branche du groupe.
+   - Rouge de code : le lot fautif se corrige sur sa branche et tu reconstruis le groupe. S'il ne se corrige pas
+     vite, il sort du groupe et les autres repartent sans lui.
    - Rouge d'infrastructure (cache du runner, timeout du registre) : tu corriges la cause, tu relances le job et tu
      réarmes.
-   - Rouge de code : tu renvoies au lieutenant.
    - Jamais de relance à l'aveugle.
 4. **Release.** Avant d'armer une série, et avant la MR vers la branche de production, lance toi-même les jobs manuels
    lourds et juge chacun d'eux.
