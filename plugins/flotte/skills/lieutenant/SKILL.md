@@ -70,11 +70,13 @@ Ta mission te donne :
 4. **Gates locales complètes**, toutes vertes. Lis leur journal, pas seulement leur code de sortie. Ensuite, une
    relecture indépendante par un sous-agent, avec une passe de simplicité.
 5. **Un seul push**, sous l'accord que fixe le projet.
-   - MR vers la branche de release, avec `Ref #N`, jamais `Closes`.
-   - La fiche suit le gabarit du projet, cases cochées.
-   - Le SHA part au coordinateur.
-   - Une seule MR en vol à la fois.
-   - Tu ne rebases que sur un conflit réel.
+   - L'accord du coordinateur dit si tu ouvres ta MR. Sans ce mot, tu pousses la **branche nue** : un lot qui attend
+     derrière une MR en CI part dans une MR groupée, que le coordinateur assemble (un commit et une fiche par lot).
+   - Ta MR, si tu l'ouvres : vers la branche de release, avec `Ref #N`, jamais `Closes`.
+   - La fiche suit le gabarit du projet, cases cochées. Sans MR, son chemin part au coordinateur avec le SHA.
+   - Un seul lot en attente de merge à la fois.
+   - Tu ne rebases que sur un conflit réel, ou quand le coordinateur te demande de reposer ton lot sur la branche
+     d'un groupe.
 6. **Retouches.** Celles que demande la relecture du coordinateur partent en **un** push, puis un message avec le SHA.
 7. **Au merge**, fais ce que dit le projet. **Ne ferme jamais une issue de feature** : c'est l'humain qui la ferme, sur son
    verdict terrain.
