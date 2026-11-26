@@ -7,8 +7,8 @@
 # lu sur `origin`), ou vers LIRE_ISSUES (préfixe d'URL) s'il est défini.
 # Les blocs mermaid se rendent en schémas (mermaid, CDN, versions figées) ; un grand schéma se zoome et se déplace.
 # Les titres portent leurs ancres à la GitLab.
-# Les liens relatifs se résolvent contre LIRE_BASE (préfixe d'URL, « .md » retiré, pour pointer vers un wiki), sinon
-# contre le dossier du fichier.
+# Les liens et les images relatifs se résolvent contre LIRE_BASE (préfixe d'URL, « .md » retiré des liens, pour pointer
+# vers un wiki), sinon contre le dossier du fichier.
 set -euo pipefail
 [ $# -ge 1 ] || { sed -n '5p' "$0" >&2; exit 2; }
 [ -f "$1" ] || { echo "✗ fichier introuvable : $1" >&2; exit 4; }
@@ -49,6 +49,11 @@ for (const h of out.querySelectorAll("h1,h2,h3,h4,h5,h6")) {
 for (const a of out.querySelectorAll("a[href]")) {
     const href = a.getAttribute("href");
     if (!/^([a-z]+:|#)/i.test(href)) a.href = new URL(href.replace(/\.md(?=#|$)/, ""), BASE).href;
+}
+// La page vit dans /tmp/claude-<uid>/montrer : une image relative se lit à côté du fichier, pas de la page.
+for (const i of out.querySelectorAll("img[src]")) {
+    const src = i.getAttribute("src");
+    if (!/^[a-z]+:/i.test(src)) i.src = new URL(src, BASE).href;
 }
 if (ISSUES) {
     const walk = document.createTreeWalker(out, NodeFilter.SHOW_TEXT), hits = [];
